@@ -1,15 +1,15 @@
 package spring.ai.test.spring_ai_demo.service;
-import org.springframework.ai.chat.client.ChatClient;
+
 import org.springframework.ai.chat.model.ChatModel;
-import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.ai.chat.model.Generation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -43,18 +43,20 @@ public class DiaryService {
             """;
 
     public String processDiary(String diaryText) {
-        // 시스템 메시지와 사용자 메시지 생성
-        SystemMessage systemMessage = new SystemMessage(SYSTEM_PROMPT);
-        UserMessage userMessage = new UserMessage(diaryText);
-
         // 메시지 목록 생성
-        Prompt prompt = new Prompt(List.of(systemMessage, userMessage));
+        List<Message> messages = new ArrayList<>();
+        messages.add(new SystemMessage(SYSTEM_PROMPT));
+        messages.add(new UserMessage(diaryText));
 
-        // 최신 API에서는 prompt() 메서드를 사용하고 content()로 결과를 가져옴
-        String response = chatModel.call();
+        // 프롬프트 생성 및 호출
+        Prompt prompt = new Prompt(messages);
+        List<Generation> generations = chatModel.call(prompt).getResults();
 
-        return response;
+        // 첫 번째 생성 결과 반환
+        if (!generations.isEmpty()) {
+            return generations.get(0).getOutput().getText();
+        }
+
+        return "응답을 생성할 수 없습니다.";
     }
 }
-
-
